@@ -24,6 +24,10 @@
 #include <Atomic/IO/File.h>
 #include <Atomic/Resource/ResourceCache.h>
 
+#include "../ToolSystem.h"
+#include "../Project/Project.h"
+#include "../NETTools/NETBuildSystem.h"
+
 #include "Asset.h"
 #include "AssetDatabase.h"
 #include "CSharpImporter.h"
@@ -49,7 +53,13 @@ namespace ToolCore
 
     bool CSharpImporter::Import()
     {
+        using namespace NETBuildAtomicProject;
+
+        VariantMap eventData;
+        eventData[P_PROJECT] = GetSubsystem<ToolSystem>()->GetProject();
+
         // We need to rebuild the project assembly
+        SendEvent(E_NETBUILDATOMICPROJECT, eventData);
 
         return true;
     }

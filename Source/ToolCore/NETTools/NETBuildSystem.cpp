@@ -31,6 +31,7 @@
 #include "../ToolSystem.h"
 #include "../ToolEnvironment.h"
 #include "../Subprocess/SubprocessSystem.h"
+#include "../Project/Project.h"
 
 #include "NETProjectGen.h"
 #include "NETBuildSystem.h"
@@ -52,6 +53,7 @@ namespace ToolCore
         Object(context)
     {
         SubscribeToEvent(E_TOOLUPDATE, HANDLER(NETBuildSystem, HandleToolUpdate));
+        SubscribeToEvent(E_NETBUILDATOMICPROJECT, HANDLER(NETBuildSystem, HandleBuildAtomicProject));
     }
 
     NETBuildSystem::~NETBuildSystem()
@@ -155,7 +157,41 @@ namespace ToolCore
 
             String ext = GetExtension(solutionPath);
 
-            if (ext == ".json")
+            if (ext == ".atomic")
+            {
+                if (curBuild_->project_.Null() || curBuild_->project_.Expired())
+                {
+                    CurrentBuildError(ToString("Error loading project (%s), project expired", solutionPath.CString()));
+                }
+
+                Project* project = curBuild_->project_;
+
+                SharedPtr<NETProjectGen> gen(new NETProjectGen(context_));
+
+                gen->SetScriptPlatform(curBuild_->platform_);
+
+                if (!gen->LoadProject(project))
+                {
+                    CurrentBuildError(ToString("Error loading project (%s)", solutionPath.CString()));
+                    return;
+                }
+
+                if (!gen->Generate())
+                {
+                    CurrentBuildError(ToString("Error generating project (%s)", solutionPath.CString()));
+                    return;
+                }
+
+                solutionPath = gen->GetSolution()->GetOutputFilename();
+
+                if (!fileSystem->FileExists(solutionPath))
+                {
+                    CurrentBuildError(ToString("Generated solution does not exist (%s : %s)", curBuild_->solutionPath_.CString(), solutionPath.CString()));
+                    return;
+                }
+
+            }
+            else if (ext == ".json")
             {
                 SharedPtr<NETProjectGen> gen(new NETProjectGen(context_));
 
@@ -257,6 +293,48 @@ namespace ToolCore
 
         return nullptr;
 
+    }
+
+    void NETBuildSystem::HandleBuildAtomicProject(StringHash eventType, VariantMap& eventData)
+    {
+        using namespace NETBuildAtomicProject;
+
+        Project* project = static_cast<Project*>(eventData[P_PROJECT].GetPtr());
+
+        if (!project)
+        {
+            LOGERROR("NETBuildSystem::HandleBuildAtomicProject - null project");
+            return;
+        }
+
+        String platform;
+        String configuration;
+
+#ifdef ATOMIC_PLATFORM_WINDOWS
+        platform = "WINDOWS";
+#elif ATOMIC_PLATFORM_OSX
+        platform = "MACOSX";
+#else
+        platform = "LINUX";
+#endif
+
+#ifdef _DEBUG
+        configuration = "Debug";
+#else
+        configuration = "Release";
+#endif
+
+        String projectPath = project->GetProjectFilePath();
+
+        NETBuild* build = Build(projectPath, platform, configuration);
+
+        if (build)
+        {
+            build->project_ = project;
+        }
+
+        LOGINFOF("Received build for project %s", project->GetProjectFilePath().CString());
+            
     }
 
     NETBuild* NETBuildSystem::Build(const String& solutionPath, const String& platform, const String& configuration)

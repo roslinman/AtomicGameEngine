@@ -270,7 +270,11 @@ namespace ToolCore
 
         pgroup.CreateChild("DebugType").SetValue("full");
         pgroup.CreateChild("Optimize").SetValue("true");
-        pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Release\\");
+        if (name_ != "AtomicProject")
+            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Release\\");
+        else
+            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_);
+
         pgroup.CreateChild("DefineConstants").SetValue("TRACE");
         pgroup.CreateChild("ErrorReport").SetValue("prompt");
         pgroup.CreateChild("WarningLevel").SetValue("4");
@@ -288,7 +292,12 @@ namespace ToolCore
         pgroup.CreateChild("DebugSymbols").SetValue("true");
         pgroup.CreateChild("DebugType").SetValue("full");
         pgroup.CreateChild("Optimize").SetValue("false");
-        pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Debug\\");
+
+        if (name_ != "AtomicProject")
+            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Debug\\");
+        else
+            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_);
+
         pgroup.CreateChild("DefineConstants").SetValue("DEBUG;TRACE");
         pgroup.CreateChild("ErrorReport").SetValue("prompt");
         pgroup.CreateChild("WarningLevel").SetValue("4");
@@ -668,7 +677,53 @@ namespace ToolCore
 
     bool NETProjectGen::LoadProject(Project* project)
     {
-        return true;
+        FileSystem* fileSystem = GetSubsystem<FileSystem>();
+        ToolEnvironment* tenv = GetSubsystem<ToolEnvironment>();
+
+        JSONValue root;
+
+        JSONValue solution;
+
+        solution["name"] = "AtomicProject";
+        solution["outputPath"] = AddTrailingSlash(project->GetProjectPath()) + "AtomicNET/Solution/";
+
+        JSONArray projects;
+
+        JSONObject jproject;
+        jproject["name"] = "AtomicProject";
+        jproject["outputType"] = "Library";
+        jproject["assemblyName"] = "AtomicProject";
+        jproject["assemblyOutputPath"] = AddTrailingSlash(project->GetResourcePath());
+
+        JSONArray references;
+        references.Push(JSONValue("System"));
+        references.Push(JSONValue("System.Core"));
+        references.Push(JSONValue("System.Xml.Linq"));
+        references.Push(JSONValue("System.XML"));
+
+        String atomicNETAssembly = tenv->GetAtomicNETCoreAssemblyDir() + "AtomicNET.dll";
+
+        if (!fileSystem->FileExists(atomicNETAssembly))
+        {
+            LOGERRORF("NETProjectGen::LoadProject - AtomicNET assembly does not exist: %s", atomicNETAssembly.CString());
+            return false;
+        }
+
+        references.Push(JSONValue(atomicNETAssembly));        
+
+        jproject["references"] = references;
+
+        JSONArray sources;
+        sources.Push(JSONValue(ToString("%s", project->GetResourcePath().CString())));
+
+        jproject["sources"] = sources;
+
+        projects.Push(jproject);
+
+        root["projects"] = projects;
+        root["solution"] = solution;
+        
+        return LoadProject(root);
     }
 
 

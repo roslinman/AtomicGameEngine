@@ -162,9 +162,9 @@ void ToolEnvironment::SetRootSourceDir(const String& sourceDir)
     atomicNETCoreAssemblyDir_ = rootSourceDir_ + "Artifacts/AtomicNET/";
 
 #ifdef _DEBUG
-    atomicNETCoreAssemblyDir_ += "Debug";
+    atomicNETCoreAssemblyDir_ += "Debug/";
 #else
-    atomicNETCoreAssemblyDir_ += "Release";
+    atomicNETCoreAssemblyDir_ += "Release/";
 #endif
 
     toolDataDir_ = rootSourceDir_ + "Data/AtomicEditor/";

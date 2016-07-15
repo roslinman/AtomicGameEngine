@@ -36,6 +36,11 @@ namespace ToolCore
         PARAM(P_ERRORTEXT, ErrorText); // for failure, the compilation output        
     }
 
+    EVENT(E_NETBUILDATOMICPROJECT, NETBuildAtomicProject)
+    {
+        PARAM(P_PROJECT, Project); // Project*
+    }
+
     enum NETBuildStatus
     {
         NETBUILD_PENDING = 0,
@@ -64,6 +69,7 @@ namespace ToolCore
         NETBuildStatus status_;
         String allArgs_;
         String output_;
+        WeakPtr<Project> project_;
         WeakPtr<Subprocess> subprocess_;
     };
 
@@ -87,6 +93,7 @@ namespace ToolCore
 
         NETBuild* GetBuild(const String& solutionPath, const String& platform, const String& configuration);
 
+        void HandleBuildAtomicProject(StringHash eventType, VariantMap& eventData);
         void HandleToolUpdate(StringHash eventType, VariantMap& eventData);
         void HandleSubprocessOutput(StringHash eventType, VariantMap& eventData);
         void HandleCompileProcessComplete(StringHash eventType, VariantMap& eventData);
