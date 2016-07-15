@@ -118,6 +118,7 @@ namespace ToolCore
         bool Generate();
 
         const String& GetOutputPath() { return outputPath_; }
+        String GetOutputFilename() { return outputPath_ + name_ + ".sln"; }
 
     private:
 

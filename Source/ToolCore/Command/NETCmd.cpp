@@ -104,7 +104,8 @@ bool NETCmd::Parse(const Vector<String>& arguments, unsigned startIndex, String&
     else if (command_ == "compile")
     {
         solutionPath_ = startIndex + 2 < arguments.Size() ? arguments[startIndex + 2] : String::EMPTY;
-        configuration_ = startIndex + 3 < arguments.Size() ? arguments[startIndex + 3] : "Release";
+        platform_ = startIndex + 3 < arguments.Size() ? arguments[startIndex + 3] : String::EMPTY;
+        configuration_ = startIndex + 4 < arguments.Size() ? arguments[startIndex + 4] : "Release";
 
         bool exists = false;
 
@@ -117,6 +118,12 @@ bool NETCmd::Parse(const Vector<String>& arguments, unsigned startIndex, String&
         if (!exists)
         {
             errorMsg = ToString("Solution file not found: %s", solutionPath_.CString());
+            return false;
+        }
+
+        if (!platform_.Length())
+        {
+            errorMsg = "Platform not specified";
             return false;
         }
 
@@ -190,7 +197,7 @@ void NETCmd::Run()
         NETBuildSystem* buildSystem = new NETBuildSystem(context_);
         context_->RegisterSubsystem(buildSystem);
        
-        NETBuild* build = buildSystem->Build(solutionPath_, configuration_);
+        NETBuild* build = buildSystem->Build(solutionPath_, platform_, configuration_);
 
         if (!build)
         {

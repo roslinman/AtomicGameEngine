@@ -63,6 +63,7 @@ private:
 
     // compile
     String solutionPath_;
+    String platform_;
     String configuration_;
 
     WeakPtr<AtomicNETService> netService_;

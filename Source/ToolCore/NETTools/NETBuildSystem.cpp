@@ -32,14 +32,16 @@
 #include "../ToolEnvironment.h"
 #include "../Subprocess/SubprocessSystem.h"
 
+#include "NETProjectGen.h"
 #include "NETBuildSystem.h"
 
 namespace ToolCore
 {
 
-    NETBuild::NETBuild(Context* context, const String& solutionPath, const String& configuration) : 
+    NETBuild::NETBuild(Context* context, const String& solutionPath, const String& platform, const String& configuration) :
         Object(context),
         solutionPath_(solutionPath),
+        platform_(platform),
         configuration_(configuration),
         status_(NETBUILD_PENDING)
     {
@@ -149,6 +151,38 @@ namespace ToolCore
                 return;
             }
 
+            String solutionPath = curBuild_->solutionPath_;
+
+            String ext = GetExtension(solutionPath);
+
+            if (ext == ".json")
+            {
+                SharedPtr<NETProjectGen> gen(new NETProjectGen(context_));
+
+                gen->SetScriptPlatform(curBuild_->platform_);
+
+                if (!gen->LoadProject(solutionPath))
+                {
+                    CurrentBuildError(ToString("Error loading project (%s)", solutionPath.CString()));
+                    return;
+                }
+
+                if (!gen->Generate())
+                {
+                    CurrentBuildError(ToString("Error generating project (%s)", solutionPath.CString()));
+                    return;
+                }
+
+                solutionPath = gen->GetSolution()->GetOutputFilename();
+
+                if (!fileSystem->FileExists(solutionPath))
+                {
+                    CurrentBuildError(ToString("Generated solution does not exist (%s : %s)", curBuild_->solutionPath_.CString(), solutionPath.CString()));
+                    return;
+                }
+
+            }
+
             ToolEnvironment* tenv = GetSubsystem<ToolEnvironment>();
             const String& nugetBinary = tenv->GetAtomicNETNuGetBinary();
 
@@ -167,8 +201,7 @@ namespace ToolCore
             }
 
             String vcvars64 = ToString("%s..\\..\\VC\\bin\\amd64\\vcvars64.bat", cmdToolsPath.CString());
-
-            const String solutionPath = curBuild_->solutionPath_;
+            
             const String configuration = curBuild_->configuration_;
 
             String cmd = "cmd";
@@ -208,7 +241,7 @@ namespace ToolCore
     }
 
 
-    NETBuild* NETBuildSystem::GetBuild(const String& solutionPath, const String& configuration)
+    NETBuild* NETBuildSystem::GetBuild(const String& solutionPath, const String& platform,  const String& configuration)
     {
         List<SharedPtr<NETBuild>>::ConstIterator itr = builds_.Begin();
 
@@ -216,7 +249,7 @@ namespace ToolCore
         {
             NETBuild* build = *itr;
 
-            if (build->solutionPath_ == solutionPath && configuration == configuration)
+            if (build->solutionPath_ == solutionPath && build->platform_ == platform && build->configuration_ == configuration)
                 return build;
 
             itr++;
@@ -226,7 +259,7 @@ namespace ToolCore
 
     }
 
-    NETBuild* NETBuildSystem::Build(const String& solutionPath, const String& configuration)
+    NETBuild* NETBuildSystem::Build(const String& solutionPath, const String& platform, const String& configuration)
     {
 
         FileSystem* fileSystem = GetSubsystem<FileSystem>();
@@ -238,13 +271,13 @@ namespace ToolCore
         }
 
         // Get existing build
-        SharedPtr<NETBuild> build(GetBuild(solutionPath, configuration));
+        SharedPtr<NETBuild> build(GetBuild(solutionPath, platform, configuration));
 
         if (build.NotNull())
             return build;
 
         // Create a new build
-        build = new NETBuild(context_, solutionPath, configuration);
+        build = new NETBuild(context_, solutionPath, platform, configuration);
 
         builds_.Push(build);        
 
