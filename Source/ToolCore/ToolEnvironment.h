@@ -79,6 +79,12 @@ public:
 
     const String& GetDevConfigFilename();
 
+    // AtomicNET
+
+    const String& GetAtomicNETCoreAssemblyDir() { return atomicNETCoreAssemblyDir_; }
+    const String& GetAtomicNETNuGetBinary() { return atomicNETNuGetBinary_; }
+
+
     // OSX
     const String& GetPlayerAppFolder() { return playerAppFolder_; }
 
@@ -131,6 +137,10 @@ private:
     String webBuildDir_;
 
     String devConfigFilename_;
+
+    // AtomicNET
+    String atomicNETCoreAssemblyDir_;
+    String atomicNETNuGetBinary_;
 
     SharedPtr<ToolPrefs> toolPrefs_;
 };

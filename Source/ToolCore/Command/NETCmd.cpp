@@ -35,8 +35,8 @@
 
 #include "NETCmd.h"
 #include "../NETTools/AtomicNETService.h"
+#include "../NETTools/NETBuildSystem.h"
 #include "../NETTools/NETProjectGen.h"
-#include "../NETTools/NETCompile.h"
 
 namespace ToolCore
 {
@@ -132,13 +132,13 @@ bool NETCmd::Parse(const Vector<String>& arguments, unsigned startIndex, String&
     return true;
 }
 
-void NETCmd::HandleNETCompileResult(StringHash eventType, VariantMap& eventData)
+void NETCmd::HandleNETBuildResult(StringHash eventType, VariantMap& eventData)
 {
-    using namespace NETCompilerResult;
+    using namespace NETBuildResult;
 
     if (eventData[P_SUCCESS].GetBool())
     {
-        LOGINFOF("NETCompile Success for solution: %s", solutionPath_.CString());
+        LOGINFOF("NETBuild Success for solution: %s", solutionPath_.CString());
         Finished();
     }
     else
@@ -146,7 +146,7 @@ void NETCmd::HandleNETCompileResult(StringHash eventType, VariantMap& eventData)
         const String& errorText = eventData[P_ERRORTEXT].GetString();
 
         LOGERRORF("\n%s\n", errorText.CString());
-        Error(ToString("NETCompile Error for solution: %s", solutionPath_.CString()));
+        Error(ToString("NETBuild Error for solution: %s", solutionPath_.CString()));
         Finished();
     }
     
@@ -186,11 +186,20 @@ void NETCmd::Run()
     }
     else if (command_ == "compile")
     {
-        compiler_ = new NETCompile(context_);
 
-        SubscribeToEvent(E_NETCOMPILERESULT, HANDLER(NETCmd, HandleNETCompileResult));
+        NETBuildSystem* buildSystem = new NETBuildSystem(context_);
+        context_->RegisterSubsystem(buildSystem);
+       
+        NETBuild* build = buildSystem->Build(solutionPath_, configuration_);
 
-        compiler_->Compile(solutionPath_, configuration_);
+        if (!build)
+        {
+            Error("Unable to start build");
+            Finished();
+            return;
+        }
+
+        build->SubscribeToEvent(E_NETBUILDRESULT, HANDLER(NETCmd, HandleNETBuildResult));        
 
     }
     else if (command_ == "genproject")

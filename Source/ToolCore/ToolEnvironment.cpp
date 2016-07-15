@@ -157,6 +157,16 @@ void ToolEnvironment::SetRootSourceDir(const String& sourceDir)
     resourcePlayerDataDir_ = rootSourceDir_ + "Resources/PlayerData";
     resourceEditorDataDir_ = rootSourceDir_ + "Resources/EditorData";
 
+    atomicNETNuGetBinary_ = ToString("%sBuild/Managed/nuget/nuget.exe", rootSourceDir_.CString());
+
+    atomicNETCoreAssemblyDir_ = rootSourceDir_ + "Artifacts/AtomicNET/";
+
+#ifdef _DEBUG
+    atomicNETCoreAssemblyDir_ += "Debug";
+#else
+    atomicNETCoreAssemblyDir_ += "Release";
+#endif
+
     toolDataDir_ = rootSourceDir_ + "Data/AtomicEditor/";
 }
 

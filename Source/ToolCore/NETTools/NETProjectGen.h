@@ -36,7 +36,7 @@ namespace ToolCore
 
     class NETProjectBase : public Object
     {
-        OBJECT(NETProjectBase);
+        OBJECT(NETProjectBase)
 
     public:
 
@@ -56,7 +56,7 @@ namespace ToolCore
 
     class NETCSProject : public NETProjectBase
     {
-        OBJECT(NETCSProject);
+        OBJECT(NETCSProject)
 
     public:
 
@@ -106,7 +106,7 @@ namespace ToolCore
 
     class NETSolution : public NETProjectBase
     {
-        OBJECT(NETSolution);
+        OBJECT(NETSolution)
 
     public:
 
@@ -131,7 +131,7 @@ namespace ToolCore
 
     class NETProjectGen : public Object
     {
-        OBJECT(NETProjectGen);
+        OBJECT(NETProjectGen)
 
     public:
 
@@ -156,6 +156,7 @@ namespace ToolCore
 
         bool LoadProject(const JSONValue& root);
         bool LoadProject(const String& projectPath);
+        bool LoadProject(Project* project);
 
     private:
 

@@ -666,6 +666,12 @@ namespace ToolCore
         return LoadProject(jvalue);
     }
 
+    bool NETProjectGen::LoadProject(Project* project)
+    {
+        return true;
+    }
+
+
     String NETProjectGen::GenerateUUID()
     {
         Poco::UUIDGenerator& generator = Poco::UUIDGenerator::defaultGenerator();

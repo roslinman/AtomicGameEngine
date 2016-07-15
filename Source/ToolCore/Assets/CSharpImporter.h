@@ -22,22 +22,31 @@
 
 #pragma once
 
-#include <Atomic/Core/Object.h>
-
-using namespace Atomic;
+#include "AssetImporter.h"
 
 namespace ToolCore
 {
 
-EVENT(E_PLATFORMCHANGED, PlatformChanged)
-{
-    PARAM(P_PLATFORM, Platform);    // Platform Ptr
-}
+    class CSharpImporter : public AssetImporter
+    {
+        OBJECT(CSharpImporter)
 
-// called at 2Hz for non-time critical updates
-EVENT(E_TOOLUPDATE, ToolUpdate)
-{
-}
+    public:
+        /// Construct.
+        CSharpImporter(Context* context, Asset* asset);
+        virtual ~CSharpImporter();
 
+        virtual void SetDefaults();
+
+        Resource* GetResource(const String& typeName = String::EMPTY);
+
+    protected:
+
+        bool Import();
+
+        virtual bool LoadSettingsInternal(JSONValue& jsonRoot);
+        virtual bool SaveSettingsInternal(JSONValue& jsonRoot);
+
+    };
 
 }

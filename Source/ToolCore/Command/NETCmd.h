@@ -30,7 +30,6 @@ namespace ToolCore
 {
 
 class AtomicNETService;
-class NETCompile;
 
 class NETCmd: public Command
 {
@@ -51,7 +50,7 @@ public:
 
 private:
 
-    void HandleNETCompileResult(StringHash eventType, VariantMap& eventData);
+    void HandleNETBuildResult(StringHash eventType, VariantMap& eventData);
 
     String command_;
 
@@ -63,7 +62,6 @@ private:
     String assemblyPath_;
 
     // compile
-    SharedPtr<NETCompile> compiler_;
     String solutionPath_;
     String configuration_;
 
