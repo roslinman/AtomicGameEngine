@@ -59,7 +59,7 @@ namespace ToolCore
         if (!AssetImporter::LoadSettingsInternal(jsonRoot))
             return false;
 
-        JSONValue import = jsonRoot.Get("TypeScriptImporter");       
+        JSONValue import = jsonRoot.Get("CSharpImporter");       
         return true;
     }
 
@@ -69,7 +69,7 @@ namespace ToolCore
             return false;
 
         JSONValue import;
-        jsonRoot.Set("TypeScriptImporter", import);
+        jsonRoot.Set("CSharpImporter", import);
 
         return true;
     }
