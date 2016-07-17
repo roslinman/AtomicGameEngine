@@ -270,10 +270,7 @@ namespace ToolCore
 
         pgroup.CreateChild("DebugType").SetValue("full");
         pgroup.CreateChild("Optimize").SetValue("true");
-        if (name_ != "AtomicProject")
-            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Release\\");
-        else
-            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_);
+        pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Release\\");
 
         pgroup.CreateChild("DefineConstants").SetValue("TRACE");
         pgroup.CreateChild("ErrorReport").SetValue("prompt");
@@ -292,12 +289,7 @@ namespace ToolCore
         pgroup.CreateChild("DebugSymbols").SetValue("true");
         pgroup.CreateChild("DebugType").SetValue("full");
         pgroup.CreateChild("Optimize").SetValue("false");
-
-        if (name_ != "AtomicProject")
-            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Debug\\");
-        else
-            pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_);
-
+        pgroup.CreateChild("OutputPath").SetValue(assemblyOutputPath_ + "Debug\\");
         pgroup.CreateChild("DefineConstants").SetValue("DEBUG;TRACE");
         pgroup.CreateChild("ErrorReport").SetValue("prompt");
         pgroup.CreateChild("WarningLevel").SetValue("4");
@@ -712,7 +704,7 @@ namespace ToolCore
         jproject["name"] = "AtomicProject";
         jproject["outputType"] = "Library";
         jproject["assemblyName"] = "AtomicProject";
-        jproject["assemblyOutputPath"] = AddTrailingSlash(project->GetResourcePath());
+        jproject["assemblyOutputPath"] = AddTrailingSlash(project->GetProjectPath()) + "AtomicNET/Bin/";
 
         JSONArray references;
         references.Push(JSONValue("System"));

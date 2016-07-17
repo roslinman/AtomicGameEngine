@@ -96,15 +96,46 @@ namespace ToolCore
 
         buildEventData[P_BUILD] = curBuild_;
 
+        bool success = true;
+        String errorMsg;
+
         if (!code)
         {
-            buildEventData[P_SUCCESS] = true;
+            if (curBuild_->project_.NotNull())
+            {
+                // Copy compiled assembly to resource path
+                String srcAssembly = AddTrailingSlash(curBuild_->project_->GetProjectPath()) + "AtomicNET/Bin/";
+                srcAssembly += curBuild_->configuration_;
+                srcAssembly += "/AtomicProject.dll";
+
+                String dstAssembly = AddTrailingSlash(curBuild_->project_->GetResourcePath()) + "AtomicProject.dll";
+
+                FileSystem* fileSystem = GetSubsystem<FileSystem>();
+
+                bool result = fileSystem->Copy(srcAssembly, dstAssembly);
+
+                if (!result)
+                {
+                    success = false;
+                    errorMsg = ToString("BuildBase::BuildCopyFile: Unable to copy assembly %s -> %s", srcAssembly.CString(), dstAssembly.CString());
+                    errorMsg += ToString("\nCompilation Command: %s", curBuild_->allArgs_.CString());
+                }
+
+            }
+            
         }
         else
         {
-            buildEventData[P_SUCCESS] = false;
-            curBuild_->output_ += ToString("\nCompilation Command: %s", curBuild_->allArgs_.CString());
-            buildEventData[P_ERRORTEXT] = curBuild_->output_;
+            success = false;
+            errorMsg = curBuild_->output_;
+            errorMsg += ToString("\nCompilation Command: %s", curBuild_->allArgs_.CString());
+        }
+
+        buildEventData[P_SUCCESS] = success;
+
+        if (!success)
+        {
+            buildEventData[P_ERRORTEXT] = errorMsg;
         }
 
         curBuild_->SendEvent(E_NETBUILDRESULT, buildEventData);
