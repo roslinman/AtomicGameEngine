@@ -69,6 +69,7 @@ namespace ToolCore
         const String& GetProjectGUID() { return projectGuid_; }
 
         const Vector<String>& GetReferences() const { return references_; }
+        const Vector<String>& GetPackages() const { return packages_; }
 
         bool Generate();
 
@@ -120,6 +121,11 @@ namespace ToolCore
         const String& GetOutputPath() { return outputPath_; }
         String GetOutputFilename() { return outputPath_ + name_ + ".sln"; }
 
+        Vector<String>& GetPackages() { return packages_;  }
+
+        // Registers a NuGet package, returns true if the package hasn't been previously registered
+        bool RegisterPackage(const String& package);
+
     private:
 
         void GenerateSolution(const String& slnPath);
@@ -127,6 +133,7 @@ namespace ToolCore
         String name_;
         String outputPath_;
         String solutionGUID_;
+        Vector<String> packages_;
 
     };
 
@@ -152,6 +159,9 @@ namespace ToolCore
         void SetScriptPlatform(const String& platform) { scriptPlatform_ = platform; }
 
         bool Generate();
+
+        /// Returns true if the generated solution requires NuGet
+        bool GetRequiresNuGet();
 
         String GenerateUUID();
 

@@ -448,6 +448,15 @@ namespace ToolCore
         for (unsigned i = 0; i < packages.Size(); i++)
         {
             String package = packages[i].GetString();
+
+            if (packages_.Find(package) != packages_.End())
+            {
+                LOGERRORF("Duplicate package found %s", package.CString());
+                continue;
+            }
+
+            projectGen_->GetSolution()->RegisterPackage(package);
+
             packages_.Push(package);
         }
 
@@ -562,6 +571,16 @@ namespace ToolCore
         // TODO: use poco mkdirs
         if (!fs->DirExists(outputPath_))
             fs->CreateDirsRecursive(outputPath_);
+
+        return true;
+    }
+
+    bool NETSolution::RegisterPackage(const String& package)
+    {
+        if (packages_.Find(package) != packages_.End())
+            return false;
+        
+        packages_.Push(package);
 
         return true;
     }
@@ -724,6 +743,18 @@ namespace ToolCore
         root["solution"] = solution;
         
         return LoadProject(root);
+    }
+
+    bool NETProjectGen::GetRequiresNuGet()
+    {
+        if (solution_.Null())
+        {
+            LOGERROR("NETProjectGen::GetRequiresNuGet() - called without a solution loaded");
+            return false;
+        }
+
+        return solution_->GetPackages().Size() != 0;
+
     }
 
 

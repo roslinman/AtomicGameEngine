@@ -157,6 +157,8 @@ namespace ToolCore
 
             String ext = GetExtension(solutionPath);
 
+            bool requiresNuGet = true;
+
             if (ext == ".atomic")
             {
                 if (curBuild_->project_.Null() || curBuild_->project_.Expired())
@@ -183,6 +185,8 @@ namespace ToolCore
                 }
 
                 solutionPath = gen->GetSolution()->GetOutputFilename();
+                requiresNuGet = gen->GetRequiresNuGet();
+
 
                 if (!fileSystem->FileExists(solutionPath))
                 {
@@ -210,6 +214,7 @@ namespace ToolCore
                 }
 
                 solutionPath = gen->GetSolution()->GetOutputFilename();
+                requiresNuGet = gen->GetRequiresNuGet();
 
                 if (!fileSystem->FileExists(solutionPath))
                 {
@@ -244,8 +249,18 @@ namespace ToolCore
             Vector<String> args;
             args.Push("/A");
             args.Push("/C");
-            args.Push(ToString("\"\"%s\" && \"%s\" restore \"%s\" && msbuild \"%s\" /p:Configuration=%s /p:Platform=\"Any CPU\"\"",
-                vcvars64.CString(), nugetBinary.CString(), solutionPath.CString(), solutionPath.CString(), configuration.CString()));
+
+            // vcvars bat
+            String compile = ToString("\"\"%s\" ", vcvars64.CString());
+
+            if (requiresNuGet)
+            {
+                compile += ToString("&& \"%s\" restore \"%s\" ", nugetBinary.CString(), solutionPath.CString());
+            }
+
+            compile += ToString("&& msbuild \"%s\" /p:Configuration=%s /p:Platform=\"Any CPU\"\"", solutionPath.CString(), configuration.CString());
+
+            args.Push(compile);
 
             curBuild_->allArgs_.Join(args, " ");
 
