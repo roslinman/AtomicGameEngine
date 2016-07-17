@@ -697,7 +697,7 @@ class SelectionInspector extends ScriptWidget {
 
         var valid = true;
 
-        if (ev.componentTypeName != "JSComponent") {
+        if (ev.componentTypeName != "JSComponent" && ev.componentTypeName != "CSComponent") {
 
             for (var i in this.nodes) {
 

@@ -121,7 +121,8 @@ namespace AtomicEngine
                 {
                     foreach (var instance in csinfo.Instances)
                     {
-                        updateMethod.Invoke(instance, args);
+                        if (instance.IsEnabled())
+                            updateMethod.Invoke(instance, args);
                     }
                 }
             }
