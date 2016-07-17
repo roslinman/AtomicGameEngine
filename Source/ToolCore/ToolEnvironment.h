@@ -83,6 +83,7 @@ public:
 
     const String& GetAtomicNETCoreAssemblyDir() { return atomicNETCoreAssemblyDir_; }
     const String& GetAtomicNETNuGetBinary() { return atomicNETNuGetBinary_; }
+    const String& GetAtomicNETManagedPlayerBinary() { return atomicNETManagedPlayerBinary_; }
 
 
     // OSX
@@ -141,6 +142,7 @@ private:
     // AtomicNET
     String atomicNETCoreAssemblyDir_;
     String atomicNETNuGetBinary_;
+    String atomicNETManagedPlayerBinary_;
 
     SharedPtr<ToolPrefs> toolPrefs_;
 };
