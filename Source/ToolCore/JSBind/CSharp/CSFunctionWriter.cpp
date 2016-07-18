@@ -313,10 +313,18 @@ void CSFunctionWriter::WriteManagedPInvokeFunctionSignature(String& source)
 
     String line = "[DllImport (Constants.LIBNAME, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]\n";
     source += IndentLine(line);
+
     JSBClass* klass = function_->GetClass();
     JSBPackage* package = klass->GetPackage();
 
     String returnType = CSTypeHelper::GetPInvokeTypeString(function_->GetReturnType());
+
+    if (returnType == "bool")
+    {
+        // default boolean marshal is 4 byte windows type BOOL and not 1 byte bool
+        // https://blogs.msdn.microsoft.com/jaredpar/2008/10/14/pinvoke-and-bool-or-should-i-say-bool/        
+        source += IndentLine("[return: MarshalAs(UnmanagedType.I1)]\n");
+    }
 
     if (returnType == "string")
         returnType = "IntPtr";
