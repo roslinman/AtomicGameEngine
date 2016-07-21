@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace AtomicEngine
 {
@@ -42,7 +43,7 @@ namespace AtomicEngine
 
             foreach (WeakReference<AObject> wr in eventReceivers)
             {
-                
+
                 if (!wr.TryGetTarget(out obj))
                     continue; // GC'd
 
@@ -94,7 +95,8 @@ namespace AtomicEngine
             ScriptVariantMap scriptMap = null;
             AObject receiver;
 
-            foreach (var w in eventReceivers)
+            // iterate over copy of list so we can modify it while running
+            foreach (var w in eventReceivers.ToList())
             {
                 // GC'd?
                 if (!w.TryGetTarget(out receiver))
@@ -124,16 +126,44 @@ namespace AtomicEngine
             var watch = new Stopwatch();
             watch.Start();
 
-            RefCounted r;
-            List<IntPtr> remove = new List<IntPtr>();
+            // expire event listeners
 
-            foreach (KeyValuePair<IntPtr, WeakReference<RefCounted>> native in nativeLookup)
+            int eventListenersRemoved = 0;
+            int nativesRemoved = 0;
+
+            AObject obj;
+
+            foreach (List<WeakReference<AObject>> receiverList in eventReceiverLookup.Values)
             {
-                if (!native.Value.TryGetTarget(out r))
+                foreach (WeakReference<AObject> receiver in receiverList.ToList())
+                {
+                    if (!receiver.TryGetTarget(out obj))
+                    {
+                        receiverList.Remove(receiver);
+                        eventListenersRemoved++;
+                    }
+
+                    if (watch.ElapsedMilliseconds > 16)
+                        break;
+
+                }
+
+                if (watch.ElapsedMilliseconds > 16)
+                    break;
+            }
+
+            RefCounted r;
+
+            foreach (var native in nativeLookup.Keys.ToList())
+            {
+                var w = nativeLookup[native];
+
+                if (!w.TryGetTarget(out r))
                 {
                     // expired
-                    csb_AtomicEngine_ReleaseRef(native.Key);
-                    remove.Add(native.Key);
+                    csb_AtomicEngine_ReleaseRef(native);
+                    nativeLookup.Remove(native);
+                    nativesRemoved++;
                 }
 
                 if (watch.ElapsedMilliseconds > 16)
@@ -141,16 +171,12 @@ namespace AtomicEngine
             }
 
             /*
-            if (remove.Count != 0)
+            if (nativesRemoved != 0 || eventListenersRemoved != 0)
             {
-                Console.WriteLine("Released {0} of {1} natives", remove.Count, nativeLookup.Count);
+                Console.WriteLine("Released {0} natives and {1} event receivers", nativesRemoved, eventListenersRemoved);
             }
             */
 
-            foreach (var ptr in remove)
-            {
-                nativeLookup.Remove(ptr);
-            }
         }
 
         static float expireDelta = 0.0f;
@@ -163,7 +189,7 @@ namespace AtomicEngine
             {
                 expireDelta = 0.0f;
                 ExpireNatives();
-            }            
+            }
         }
 
         // register a newly created native
@@ -200,7 +226,7 @@ namespace AtomicEngine
                 if (w.TryGetTarget(out r))
                 {
                     // we're alive!
-                    return (T)r ;
+                    return (T)r;
                 }
                 else
                 {
@@ -237,7 +263,7 @@ namespace AtomicEngine
 
             // store a ref, so native side will not be released while we still have a reference in managed code
             r.AddRef();
-            
+
             return (T)r;
         }
 
@@ -269,7 +295,7 @@ namespace AtomicEngine
             {
                 IntPtr value = nativeContructorOverride;
                 nativeContructorOverride = IntPtr.Zero;
-                return value;                
+                return value;
             }
 
             set
