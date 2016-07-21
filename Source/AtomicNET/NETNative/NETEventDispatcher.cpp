@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <Atomic/Core/CoreEvents.h>
+
 #include "NETCore.h"
 #include "NETEventDispatcher.h"
 
@@ -39,6 +41,11 @@ namespace Atomic
 
     void NETEventDispatcher::BeginSendEvent(Context* context, Object* sender, StringHash eventType, VariantMap& eventData)
     {
+        if (eventType == E_UPDATE)
+        {
+            NETCore::DispatchUpdateEvent(eventData[Update::P_TIMESTEP].GetFloat());
+        }
+
         if (!netEvents_.Contains(eventType))
             return;
 

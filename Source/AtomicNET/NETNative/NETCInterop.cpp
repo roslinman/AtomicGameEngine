@@ -23,6 +23,14 @@ namespace Atomic
             return refCounted->GetClassID();
         }
 
+        ATOMIC_EXPORT_API void csb_AtomicEngine_ReleaseRef(RefCounted* refCounted)
+        {
+            if (!refCounted)
+                return;
+
+            refCounted->ReleaseRef();
+        }
+
         ATOMIC_EXPORT_API void csb_Atomic_AObject_SendEvent(Object* obj, const char* eventType, ScriptVariantMap* vmap)
         {
             obj->SendEvent(eventType, vmap ? vmap->GetVariantMap() : obj->GetEventDataMap());

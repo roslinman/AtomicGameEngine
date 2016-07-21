@@ -17,8 +17,15 @@ namespace AtomicEngine
 
             app.Initialize();
 
+            // TODO: Refactor these registrations
             AtomicNET.RegisterSubsystem("Graphics");
             AtomicNET.RegisterSubsystem("Player");
+
+            AtomicNET.RegisterSubsystem("Input");
+            AtomicNET.RegisterSubsystem("Renderer");
+
+            AtomicNET.RegisterSubsystem("ResourceCache");
+            AtomicNET.Cache = AtomicNET.GetSubsystem<ResourceCache>();
 
             return app;
         }
